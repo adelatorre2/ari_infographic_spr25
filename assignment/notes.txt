@@ -4,3 +4,342 @@ TODO
 
 Other:
 • honestly these stats suck and should be disaggregated; ask if you can have a version of this dataset, just without names and contact info (b/c FERPA)
+
+
+
+SCRAPS:
+
+## Introduction
+
+This R Markdown report visualizes key academic and demographic highlights from the UW–Madison Posse Program for the Spring 2025 semester. The visualizations created here will be used in the Posse alumni newsletter and other community-facing updates.
+
+All data are derived from the summary provided by Dr. Marla Delgado-Guerrero and are accurate as of **May 23, 2025**.
+
+---
+
+## Declare Summary Data
+
+```{r declare-data}
+# Enrollment summary
+total_scholars <- 162
+reported_grades <- 150
+awaiting_grades <- 12
+
+# Scholars by city
+city_data <- tibble(
+  City = c("Chicago", "DC", "LA", "NY"),
+  Count = c(40, 46, 35, 41)
+)
+
+# Scholars by year
+year_data <- tibble(
+  Year = c("1st", "2nd", "3rd", "4th", "5th+"),
+  Count = c(42, 40, 39, 34, 7)
+)
+
+# Top schools/colleges
+school_data <- tibble(
+  School = c("Letters & Science", "Engineering", "Business"),
+  Count = c(66, 23, 21)
+)
+
+# GPA summary
+gpa_summary <- list(
+  average_semester_gpa = 3.22,
+  gpa_3_0_plus = 105,
+  gpa_3_5_plus = 64,
+  gpa_4_0_full_time = 19,
+  gpa_4_0_part_time = 2
+)
+
+# GPA by year
+avg_gpa_by_year <- tibble(
+  Year = c("1st (2024)", "2nd (2023)", "3rd (2022)", "4th (2021)", "5th+ (2020+)"),
+  GPA = c(3.29, 3.12, 3.35, 3.16, 3.15)
+)
+
+# Dean's List by city
+deans_list_data <- tibble(
+  City = c("Chicago", "DC", "LA", "NY"),
+  Deans_List_Count = c(11, 13, 9, 7)
+)
+
+graduates_2025 <- 27
+cumulative_gpa <- 3.26
+study_abroad_count <- 13
+
+```
+# Define UW-Madison Color Palette
+````{r define-colors, include=FALSE}
+uw_colors <- c(
+  "Chicago" = "#C5050C",   # Badger Red
+  "DC" = "#9B0000",      # Dark Red
+  "LA" = "#0479A8",      # Link Blue
+  "NY" = "#333333"         # Neutral Gray
+)
+````
+
+## Viz 1: Plot Scholars by City
+This visualization shows the distribution of currently enrolled Posse Scholars at UW–Madison for Spring 2025, broken down by originating city (Chicago, D.C., L.A., and New York). Each city’s slice is sized by scholar count, not percentage. Labels indicate the city and corresponding number of scholars. Colors are drawn from UW–Madison's official web/digital brand palette.
+```{r scholars-by-city, echo=FALSE}
+# Prepare label and fill color order
+city_data <- city_data %>%
+  mutate(
+    Label = paste0(City, ": ", Count)
+  )
+
+# Pie chart using UW-Madison brand colors (with polishing)
+ggplot(city_data, aes(x = "", y = Count, fill = City)) +
+  geom_bar(stat = "identity", width = 1, color = "white", size = 1.2) +
+  coord_polar(theta = "y") +
+  geom_text(aes(label = Label),
+            position = position_stack(vjust = 0.5),
+            color = "white",
+            size = 6,
+            fontface = "bold",
+            lineheight = 1.3) +
+  scale_fill_manual(values = uw_colors) +
+  theme_void() +
+  theme(
+    plot.title = element_blank(),
+    legend.position = "none"
+  )
+
+# Save chart with transparent background
+ggsave(
+  filename = "figures/scholars_by_city_piechart.png",
+  plot = last_plot(),
+  width = 6,
+  height = 6,
+  dpi = 300,
+  bg = "transparent"
+)
+```
+## Viz 2: Scholars by Year
+This bar chart visualizes the distribution of currently enrolled UW–Madison Posse Scholars in Spring 2025 by academic year (1st through 5th+). It is meant to offer a straightforward breakdown of the scholar class composition across cohorts. The chart does not aim to highlight trends or comparative performance but simply conveys how many Posse Scholars are in each academic standing. To ensure visual flexibility for future infographic design, we use a neutral, UW-Madison branded grayscale palette.
+```{r scholars-by-year, echo=TRUE, message=FALSE, warning=FALSE}
+# Load required libraries specific to this chunk
+library(tidyverse)
+library(ggplot2)
+library(scales)
+
+# Declare scholar year data
+year_data <- tibble(
+  Year = factor(c("1st", "2nd", "3rd", "4th", "5th+"), levels = c("1st", "2nd", "3rd", "4th", "5th+")),
+  Count = c(42, 40, 39, 34, 7)
+)
+
+# Define a simple grayscale UW-Madison color palette
+uw_neutral <- c("#333333", "#666666", "#999999", "#CCCCCC", "#E5E5E5")
+
+# Create a basic vertical bar chart
+ggplot(year_data, aes(x = Year, y = Count, fill = Year)) +
+  geom_bar(stat = "identity", width = 0.65, show.legend = FALSE, color = "white") +  # Draw bars
+  geom_text(aes(label = Count), vjust = -0.5, size = 5) +  # Add value labels above each bar
+  scale_fill_manual(values = uw_neutral) +  # Apply neutral UW color scale
+  labs(
+    y = "Number of Scholars",
+    x = NULL,
+    caption = "Distribution of 162 UW–Madison Posse Scholars by academic year (Spring 2025)."
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 13),
+    plot.caption = element_text(size = 10, hjust = 0.5)
+  )
+
+# Save plot to figures directory
+ggsave(
+  filename = "figures/scholars_by_year_barchart.png",
+  plot = last_plot(),
+  width = 7,
+  height = 5,
+  dpi = 300,
+  bg = "transparent"
+)
+```
+
+## Viz 3: Scholars by College (Horizontal Bar Chart)
+This visualization presents the distribution of UW–Madison Posse Scholars across the top three colleges: Letters & Science, Engineering, and Business. These three account for 110 of the 162 total scholars, and an "Other" category is added for completeness. This visual is descriptive only and highlights where scholars are primarily concentrated. A horizontal bar chart is chosen for its readability and clarity when displaying short categorical labels.
+```{r viz-3-colleges-horizontal-bar, echo=FALSE, message=FALSE, warning=FALSE}
+# Load required libraries for this chart only
+library(tidyverse)
+library(ggplot2)
+
+# Declare summary data for top colleges
+college_data <- tibble(
+  College = c("Letters & Science", "Engineering", "Business"),
+  Scholars = c(66, 23, 21)
+)
+
+# Plot horizontal bar chart
+college_bar <- ggplot(college_data, aes(x = Scholars, y = fct_reorder(College, Scholars))) +
+  geom_bar(stat = "identity", fill = "#c5050c") +  # Badger Red
+  geom_text(aes(label = Scholars), hjust = -0.1, color = "black", size = 4.5) +
+  labs(x = "Number of Scholars", y = NULL) +
+  theme_minimal() +
+  theme(
+    axis.text = element_text(size = 12),
+    axis.title.x = element_text(size = 12),
+    plot.margin = margin(10, 30, 10, 10)
+  ) +
+  xlim(0, max(college_data$Scholars) + 5)  # Add headroom for label spacing
+
+# Print chart
+college_bar
+
+# Save as transparent PNG
+ggsave(
+  filename = "figures/scholars_by_college_bar.png",
+  plot = college_bar,
+  width = 8,
+  height = 4,
+  dpi = 300,
+  bg = "transparent"
+)
+```
+# Viz 4: Enhanced GPA Distribution with Highlighted Mean (DO NOT USE)
+This visualization presents an improved stacked horizontal bar chart of GPA bands (Below 3.0, 3.0–3.49, 3.5–3.99, and 4.0), showing the count of Posse Scholars per GPA band. The chart includes a visual marker indicating the average semester GPA (3.22), providing an at-a-glance context of where most students fall in the distribution. While the lowest category (Below 3.0) is still shown for completeness, our visual and labeling strategy emphasizes the excellence of students achieving 3.0 and above.
+```{r viz-gpa-enhanced-stacked-bar, echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(ggplot2)
+
+# GPA band data (estimated from cumulative structure)
+gpa_data <- tibble(
+  Category = factor(c("Below 3.0", "3.0–3.49", "3.5–3.99", "4.0"), levels = c("Below 3.0", "3.0–3.49", "3.5–3.99", "4.0")),
+  Count = c(57, 41, 43, 21)
+)
+
+# Add position for cumulative stacking
+gpa_data <- gpa_data %>% mutate(pos = cumsum(Count) - Count / 2)
+
+# Mean GPA for annotation
+mean_gpa <- 3.22
+
+# Plot stacked horizontal bar chart
+p <- ggplot(gpa_data, aes(x = 1, y = Count, fill = Category)) +
+  geom_bar(stat = "identity", width = 0.4, color = "white") +
+  coord_flip() +
+  geom_text(aes(label = paste0(Count, " (", round(Count / sum(Count) * 100), "%)")),
+            position = position_stack(vjust = 0.5), color = "white", size = 5) +
+  scale_fill_manual(values = c("#E5E5E5", "#CCCCCC", "#999999", "#333333")) +
+  labs(
+    x = NULL, y = "Number of Scholars",
+    fill = "GPA Band",
+    caption = "Estimated GPA band distribution for 150 UW–Madison Posse Scholars (Spring 2025).\nVertical line represents the average GPA: 3.22"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    legend.position = "bottom",
+    plot.caption = element_text(size = 10, hjust = 0.5)
+  ) +
+  annotate("segment", x = 0.65, xend = 1.35, y = mean_gpa * (sum(gpa_data$Count) / 4),
+           yend = mean_gpa * (sum(gpa_data$Count) / 4), color = "#C5050C", size = 1.25, linetype = "dashed") +
+  annotate("text", x = 1.5, y = mean_gpa * (sum(gpa_data$Count) / 4), label = "Mean GPA: 3.22",
+           color = "#C5050C", hjust = -0.1, size = 4.5)
+
+p
+
+# Save figure with transparent background
+ggsave("figures/gpa_distribution_enhanced_stackedbar.png", plot = p,
+       width = 9, height = 3.5, dpi = 300, bg = "transparent")
+```
+
+# Viz 5: GPA Threshold Counts (Lollipop Chart)
+```{r viz-gpa-lollipop, echo=FALSE, message=FALSE, warning=FALSE}
+# === Lollipop Chart: GPA Threshold Counts ===
+library(ggplot2)
+
+# Lollipop data
+gpa_lollipop <- tibble(
+  Band = c("3.0+", "3.5+", "4.0"),
+  Count = c(105, 64, 21)
+)
+
+ggplot(gpa_lollipop, aes(x = Band, y = Count)) +
+  geom_segment(aes(x = Band, xend = Band, y = 0, yend = Count), color = "#666666", size = 1.5) +
+  geom_point(color = "#C5050C", size = 6) +
+  geom_text(aes(label = Count), vjust = -1, size = 5) +
+  labs(
+    x = "GPA Band", y = "Number of Scholars",
+    title = "UW–Madison Posse Scholars by GPA Threshold (Spring 2025)",
+    caption = "Based on cumulative counts; 4.0 includes full- and part-time scholars."
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 13),
+    plot.caption = element_text(size = 10)
+  )
+
+ggsave("figures/gpa_lollipop_chart.png", width = 6, height = 4, dpi = 300, bg = "transparent")
+```
+
+# Viz 6: GPA Distribution Table + Highlighted Stacked Bar Chart (DO NOT USE)
+This visualization provides both a tabular and graphical breakdown of Spring 2025 GPAs among the 150 UW–Madison Posse Scholars with reported grades. The stacked bar chart emphasizes GPA achievement tiers while visually highlighting key cumulative thresholds (70% with ≥3.0 GPA, and 42.7% with ≥3.5 GPA). The average GPA (3.22) is annotated as a horizontal marker. While 30% of scholars earned a GPA below 3.0, the visual emphasis remains on the majority’s academic excellence.
+```{r viz-gpa-table-bar, echo=FALSE, message=FALSE, warning=FALSE}
+# Load libraries
+library(tidyverse)
+library(ggplot2)
+library(gridExtra)
+
+# GPA data summary
+gpa_distribution <- tibble(
+  Band = c("4.0", "3.5–3.99", "3.0–3.49", "< 3.0"),
+  Count = c(21, 43, 41, 45),
+  Percent = c(14.0, 28.6, 27.3, 30.0)
+)
+
+# === GPA Table ===
+gpa_table <- gpa_distribution %>%
+  mutate(
+    `GPA Band` = Band,
+    `# of Scholars` = Count,
+    `% of 150` = paste0(Percent, "%")
+  ) %>%
+  select(`GPA Band`, `# of Scholars`, `% of 150`)
+
+# === Plot: Stacked Vertical Bar Chart with Overlays ===
+gpa_distribution$Band <- factor(gpa_distribution$Band, levels = rev(gpa_distribution$Band))
+
+# Bar chart setup
+stacked_plot <- ggplot(gpa_distribution, aes(x = "", y = Count, fill = Band)) +
+  geom_bar(stat = "identity", width = 0.5, color = "white") +
+  geom_text(aes(label = paste0(Percent, "% (", Count, ")")),
+            position = position_stack(vjust = 0.5), color = "white", size = 5) +
+  scale_fill_manual(values = c("#005F73", "#0A9396", "#94D2BD", "#E9D8A6")) +
+  labs(
+    y = "Number of Scholars",
+    x = NULL,
+    fill = "GPA Band",
+    caption = "Among 150 scholars with grades: 70% (105) have GPA ≥ 3.0, 42.7% (64) ≥ 3.5.\nAverage GPA: 3.22 (red line)."
+  ) +
+  theme_minimal() +
+  theme(
+    plot.caption = element_text(size = 10, hjust = 0.5),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()
+  ) +
+  annotate("segment", x = 0.7, xend = 1.3, y = 105, yend = 105,
+           color = "#FAA307", size = 1.2, linetype = "dashed") +
+  annotate("segment", x = 0.7, xend = 1.3, y = 64, yend = 64,
+           color = "#008000", size = 1.2, linetype = "dashed") +
+  annotate("segment", x = 0.7, xend = 1.3, y = 3.22 * (150/4), yend = 3.22 * (150/4),
+           color = "#D62828", size = 1.2, linetype = "dashed") +
+  annotate("text", x = 1.35, y = 105, label = "70% ≥ 3.0", color = "#FAA307", hjust = 0, size = 4.5) +
+  annotate("text", x = 1.35, y = 64, label = "42.7% ≥ 3.5", color = "#008000", hjust = 0, size = 4.5) +
+  annotate("text", x = 1.35, y = 3.22 * (150/4), label = "Avg GPA: 3.22", color = "#D62828", hjust = 0, size = 4.5)
+
+# === Table using gridExtra ===
+table_grob <- tableGrob(gpa_table, rows = NULL)
+
+# Display plot and table vertically
+grid.arrange(stacked_plot, table_grob, nrow = 2, heights = c(3, 1))
+
+# Save plot only
+ggsave("figures/viz6_gpa_distribution_with_table.png", plot = stacked_plot,
+       width = 5, height = 7, dpi = 300, bg = "transparent")
+```
