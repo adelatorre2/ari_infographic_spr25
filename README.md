@@ -1,5 +1,3 @@
-# Spring 2025 UW–Madison Posse Infographic
-
 # Spring 2025 UW–Madison Posse Infographic Repository
 
 This repository contains visualizations and design materials created for the Spring 2025 edition of the UW–Madison Posse Alumni Newsletter. The infographic series highlights key academic metrics and student achievements from the 2025 Spring semester, combining data analysis with storytelling design.
